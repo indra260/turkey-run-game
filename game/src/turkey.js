@@ -24,7 +24,9 @@ export class Turkey {
   }
 
   get bounds() {
-    // Sliding makes the turkey low and long; hiding shrinks it inside hay.
+    // Sliding makes the turkey low and long; hiding shrinks it inside
+    // the hay, low and narrow, so obstacles pass over the haystack.
+    if (this.hidden) return { x: this.x + 8, y: VIEW.groundY - 30, w: 48, h: 30 };
     if (this.sliding) return { x: this.x - 6, y: VIEW.groundY - 30, w: 78, h: 30 };
     return { x: this.x, y: this.y, w: this.width, h: this.height };
   }
