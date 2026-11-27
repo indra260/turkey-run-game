@@ -35,7 +35,11 @@ export class World {
     const finalKind = kind === 'oven' && stage.name !== 'KITCHEN' ? 'fence' : kind;
     const d = OBSTACLES[finalKind];
     const ent = { kind: finalKind, x, y: VIEW.groundY - d.height, w: d.width, h: d.height, passed: false, bob: this.rng() * 6 };
-    if (finalKind === 'knife') { ent.y = VIEW.groundY - 84; ent.swing = 0; }
+    // Knife hangs low: its blade band (groundY-62 .. groundY-32)
+    // overlaps a standing turkey (394..452) but clears a slide
+    // (422..452). v1 hung it at groundY-84, 4 px above the turkey's
+    // head, so it could never hit a turkey that didn't jump.
+    if (finalKind === 'knife') { ent.y = VIEW.groundY - 62; ent.swing = 0; }
     if (finalKind === 'haystack') ent.hideUsed = false;
     this.entities.push(ent);
     this.spawnCount += 1;
@@ -63,8 +67,11 @@ export class World {
     }
     if (this.stageFlash > 0) this.stageFlash -= dt;
     this.nextSpawnX -= this.speed * dt;
-    // Spawn spacing tightens as the run gets faster.
-    const gap = Math.max(300, 560 - this.distance * 0.22);
+    // Spawn spacing tightens as the run gets faster, but never below
+    // what a jump can clear: at max speed (470 px/s) a 420 px gap is
+    // 0.89 s between obstacles, and one jump lasts 0.80 s. v1 allowed
+    // 300 px (0.64 s), so late-game jump chains could be impossible.
+    const gap = Math.max(420, 620 - this.distance * 0.22);
     if (this.nextSpawnX < VIEW.width) {
       this.spawnOne(VIEW.width + 40 + range(this.rng, 0, 120));
       this.nextSpawnX += gap + range(this.rng, 0, 140);
