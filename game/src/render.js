@@ -111,15 +111,18 @@ export function drawObstacle(ctx, e, stage) {
     return;
   }
   if (e.kind === 'knife') {
+    // Blade pivots near the top of its hitbox (e.y + 15) so what the
+    // player sees is what can hit them: v1 pivoted at e.y + 40, below
+    // the hitbox, so the visible blade never matched the danger zone.
     const swing = Math.sin(e.swing || 0) * 0.35;
     ctx.save();
-    ctx.translate(e.x + 29, e.y + 40);
+    ctx.translate(e.x + 29, e.y + 15);
     ctx.rotate(swing);
     ctx.fillStyle = '#c8ccd4';
     ctx.beginPath(); ctx.moveTo(-28, -6); ctx.lineTo(14, -6); ctx.lineTo(28, 0); ctx.lineTo(14, 6); ctx.lineTo(-28, 6); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#5a2e16'; ctx.fillRect(-34, -8, 12, 16);
     ctx.restore();
-    ctx.fillStyle = '#8a5a30'; ctx.fillRect(e.x + 24, e.y + 40, 6, VIEW.groundY - e.y - 40);
+    ctx.fillStyle = '#8a5a30'; ctx.fillRect(e.x + 24, e.y + 15, 6, VIEW.groundY - e.y - 15);
     return;
   }
   if (e.kind === 'haystack') {
@@ -189,7 +192,7 @@ export function drawFarmer(ctx, farmer, t) {
   ctx.fillStyle = '#7a5a2e'; ctx.fillRect(-18, -108, 36, 7);
   ctx.fillRect(-10, -122, 20, 16);
   ctx.fillStyle = '#5a3a16'; ctx.fillRect(-12, -92, 24, 5);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px sans-serif';
   ctx.fillText('!', 26, -118);
   ctx.restore();
   if (farmer.state === 'searching') {
