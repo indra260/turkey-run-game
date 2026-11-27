@@ -49,8 +49,12 @@ export class Farmer {
       return;
     }
     if (turkeyHidden) return;
-    // A clean run slowly opens the gap; a stumbling turkey lets him close in.
-    const drift = turkeyStumbling ? -95 : 26;
+    // A clean run slowly opens the gap; a stumbling turkey lets him
+    // close in. The drift is small on purpose: one hit costs about
+    // 40 + 0.7*45 ≈ 70 px of gap (see takeHit), so a single stumble
+    // never hands the farmer the run — v1 drifted -95 px/s, which,
+    // with the 85 px surge, ended most runs on the first hit.
+    const drift = turkeyStumbling ? -45 : 26;
     this.gap = Math.min(FARMER.startGap + 90, Math.max(FARMER.catchGap - 6, this.gap + drift * dt));
   }
 }
