@@ -28,8 +28,9 @@ dinner is served. Three lives. Reach 1,000 m and you escape.
 - A complete game: title screen, a run with a HUD (score, distance,
   lives, corn, farmer proximity), and end screens for both **caught**
   and **escaped**, with restart.
-- Three stages that grow harder — farmyard, barn, kitchen — with the
-  oven only appearing once you reach the kitchen.
+- Four stages that grow harder — farmyard, barn, kitchen, then the
+  woods (freedom) — with the oven only appearing once you reach the
+  kitchen.
 - A farmer AI that chases, surges on your stumbles, searches haystacks
   and corners you.
 - Original canvas-drawn art (turkey, farmer, farm, kitchen, autumn
@@ -46,6 +47,25 @@ Or serve `game/` with any static server and open `game/index.html`.
 
 Screenshots are deterministic: `?shot=start|play|end&seed=1` renders a
 fixed title, mid-run, or end state (see `shots.json`).
+
+## Balance notes (v2 polish, 27 Nov 2026)
+
+Play-testing v1 found and fixed real gameplay bugs: the carving knife
+hung 4 px above a standing turkey's head, so it could never hit one —
+it now hangs at body height and a slide ducks clean under it; the
+distance score never moved (each frame's slice floored to 0) — it now
+banks fractionally; one stumble used to end the run even with lives
+left (farmer surge + drift ≈ 151 px vs a 160 px starting gap) — a hit
+now costs ≈ 70 px and the catch is judged after the grace window; the
+**H** key was advertised but dead — it now hides in a nearby haystack;
+late-game obstacle gaps could be shorter than one jump (300 px vs
+0.80 s airtime) — the minimum is now 420 px; the oven was nearly
+unjumpable (96 px vs a −640 jump) — it is 80 px now and the jump is
+−700; the slide was 0.55 s, too short to cover a knife at low speed —
+it is 0.80 s now. The title screen shows the turkey, the end screens
+show the right stage palette, and the CAUGHT screen shows the farmer.
+Verified by a scripted play-through: an auto-played run escapes the
+full 1,000 m.
 
 ## Layout
 
