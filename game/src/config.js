@@ -8,9 +8,19 @@ export const TURKEY = {
   x: 170,
   width: 64,
   height: 58,
-  jumpVelocity: -640,
+  // Jump velocity -700 (apex 140 px, airtime 0.80 s): the oven is
+  // 80 px tall, so the turkey stays above it for 0.52 s — long
+  // enough for the 148 px oven overlap at kitchen speed. v1 jumped
+  // -640 against a 96 px oven: above-oven window 0.31 s vs 0.37 s
+  // overlap, so ovens were (nearly) impossible to clear.
+  jumpVelocity: -700,
   gravity: 1750,
-  slideTime: 0.55,
+  // Slide lasts 0.80 s: a slide must cover the whole 122 px knife
+  // overlap (58 px blade + 64 px turkey). At base speed 300 px/s
+  // that is 0.41 s of overlap, so the player may start the slide up
+  // to ~118 px out. v1's 0.55 s slide expired mid-knife unless
+  // started within 43 px at low speed — nearly unusable by reaction.
+  slideTime: 0.8,
   runBobHz: 11,
 };
 
@@ -48,8 +58,14 @@ export const RUN = {
 export const OBSTACLES = {
   fence: { width: 26, height: 64, jump: true },
   pumpkin: { width: 46, height: 40, jump: true },
-  oven: { width: 84, height: 96, jump: true, fire: true },
-  knife: { width: 58, height: 22, slide: true },
+  // Oven: 80 px tall so a -700 jump (apex 140 px) clears it with a
+  // real timing window. v1's 96 px oven vs a -640 jump left only a
+  // 0.31 s above-oven window for a 0.37 s overlap — unjumpable.
+  oven: { width: 84, height: 80, jump: true, fire: true },
+  // Knife: tall enough to catch a standing turkey (its blade band
+  // must overlap the turkey's standing body), low enough that a
+  // slide (30 px tall) ducks clean under it.
+  knife: { width: 58, height: 30, slide: true },
   haystack: { width: 70, height: 62, hide: true },
 };
 
