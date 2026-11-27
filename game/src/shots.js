@@ -2,6 +2,8 @@
 // One job: ?shot=start|play|end (and &seed=) puts the game into a
 // fixed, readable pose so screenshots are reproducible renders.
 
+import { stageAt } from './config.js';
+
 export function parseShot() {
   const q = new URLSearchParams(window.location.search);
   const shot = q.get('shot');
@@ -32,7 +34,7 @@ export function applyShot(game, shotInfo) {
       { kind: 'corn', x: 560, y: 342, w: 26, h: 30, passed: false, bob: 0, bobPhase: 0.5 },
       { kind: 'corn', x: 594, y: 342, w: 26, h: 30, passed: false, bob: 0, bobPhase: 0.5 },
       { kind: 'pumpkin', x: 700, y: 412, w: 46, h: 40, passed: false, bob: 0, bobPhase: 0 },
-      { kind: 'knife', x: 830, y: 368, w: 58, h: 22, passed: false, bob: 0, bobPhase: 0, swing: 0.4 },
+      { kind: 'knife', x: 830, y: 390, w: 58, h: 30, passed: false, bob: 0, bobPhase: 0, swing: 0.4 },
     ];
     game.turkey.y = 452 - 58;
     game.turkey.runTime = 1.2;
@@ -45,6 +47,10 @@ export function applyShot(game, shotInfo) {
     game.corn = 14;
     game.distance = outcome === 'escaped' ? 1000 : 612;
     game.world.distance = game.distance;
+    // Keep the stage in step with the distance: v1 set the distance
+    // directly, so an escape at 1000 m rendered in farmyard colours
+    // instead of the woods, and a 612 m catch in farmyard, not barn.
+    game.world.stage = stageAt(game.distance);
     game.best = 2480;
     game.finish(outcome);
   }
