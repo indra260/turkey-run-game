@@ -33,6 +33,7 @@ export class Game {
     this.sounds = new SoundBank();
     this.state = 'title'; // title | playing | paused | end
     this.score = 0;
+    this.scoreFloat = 0; // fractional distance points, banked to whole
     this.corn = 0;
     this.lives = RUN.startLives;
     this.best = Number(localStorage.getItem('gobble-dash-best') || 0);
@@ -52,6 +53,7 @@ export class Game {
     this.farmer.reset();
     this.world.reset(seed);
     this.score = 0;
+    this.scoreFloat = 0;
     this.corn = 0;
     this.lives = RUN.startLives;
     this.outcome = null;
@@ -82,10 +84,36 @@ export class Game {
     this.hitGrace = RUN.hitGrace;
     this.lives -= 1;
     this.turkey.stumble(0.7);
-    this.farmer.surge(85);
+    // A hit costs ~40 px of gap plus the stumble drift (~32 px), so
+    // one hit never ends the run on its own: v1 surged 85 px and let
+    // the farmer close ~151 px per hit, which caught the turkey on
+    // the first stumble even with lives left. Getting caught is now
+    // decided by the gap check in update(), after the grace window.
+    this.farmer.surge(40);
     this.sounds.hit();
     this.announce(`Ouch — ${reason}! ${this.lives} ${this.lives === 1 ? 'life' : 'lives'} left. The farmer is closing in!`);
-    if (this.lives <= 0 || this.farmer.caught) this.finish('caught');
+    if (this.lives <= 0) this.finish('caught');
+  }
+
+  // Slip into a haystack: the farmer stops to search, the turkey is
+  // safe inside for 2.4 s. Shared by the overlap trigger and the H key.
+  hideInHay(hay) {
+    if (hay.hideUsed || this.turkey.hidden || !this.turkey.onGround) return false;
+    hay.hideUsed = true;
+    this.turkey.hide(2.4, this.sounds);
+    this.farmer.loseTrail(2.4);
+    this.score += 40;
+    this.announce('Hidden in the hay! The farmer is searching…');
+    return true;
+  }
+
+  // H key: hide in the nearest haystack within reach (200 px).
+  tryHide() {
+    if (this.state !== 'playing' || this.turkey.hidden || !this.turkey.onGround) return;
+    const hay = this.world.entities.find(
+      (e) => e.kind === 'haystack' && !e.hideUsed && Math.abs(e.x - this.turkey.x) < 200,
+    );
+    if (hay) this.hideInHay(hay);
   }
 
   update(dt) {
@@ -113,24 +141,26 @@ export class Game {
         continue;
       }
       if (e.kind === 'haystack') {
-        if (this.world.overlaps(tb, e) && !e.hideUsed && this.turkey.onGround) {
-          e.hideUsed = true;
-          this.turkey.hide(2.4, this.sounds);
-          this.farmer.loseTrail(2.4);
-          this.score += 40;
-          this.announce('Hidden in the hay! The farmer is searching…');
-        }
+        if (this.world.overlaps(tb, e)) this.hideInHay(e);
         continue;
       }
+      // A hidden turkey is inside the hay: obstacles pass over it.
+      if (this.turkey.hidden) continue;
       if (this.world.overlaps(tb, e)) {
         const name = e.kind === 'oven' ? 'the oven' : e.kind === 'knife' ? 'a carving knife' : `a ${e.kind}`;
         this.takeHit(`hit ${name}`);
       }
     }
-    if (this.farmer.caught) { this.finish('caught'); return; }
+    // No catch while the hit-grace window is open: the farmer's surge
+    // lands first, the catch is judged once the turkey recovers.
+    if (this.hitGrace <= 0 && this.farmer.caught) { this.finish('caught'); return; }
     if (this.world.done) { this.finish('escaped'); return; }
-    // Score ticks up with every metre survived.
-    this.score += Math.floor(this.world.speed * dt / 28);
+    // Score ticks up with every metre survived: bank the fractional
+    // part, since one frame is only ~0.2 m. v1 floored each frame's
+    // slice, which was always 0 — distance score never moved.
+    this.scoreFloat += (this.world.speed * dt) / 28;
+    const whole = Math.floor(this.scoreFloat);
+    if (whole > 0) { this.score += whole; this.scoreFloat -= whole; }
   }
 
   render() {
@@ -146,6 +176,15 @@ export class Game {
     if (this.state === 'title') this.titleButton = drawTitle(ctx, this.best);
     if (this.state === 'end') this.endButton = drawEnd(ctx, this);
     if (this.state === 'paused') drawPaused(ctx);
+    // The title/end panels dim the whole screen, so the turkey and
+    // the farmer are drawn again on top of them: the cover must show
+    // its player (v1 hid the turkey behind the title panel), and the
+    // CAUGHT screen must show the farmer who caught him.
+    if (this.state === 'title') {
+      drawTurkey(ctx, this.turkey, this.time);
+      drawFarmer(ctx, this.farmer, this.time);
+    }
+    if (this.state === 'end' && this.outcome === 'caught') drawFarmer(ctx, this.farmer, this.time);
   }
 
   onKey(code) {
@@ -165,6 +204,9 @@ export class Game {
     if (this.state !== 'playing') return;
     if (code === 'Space' || code === 'ArrowUp' || code === 'KeyW') this.turkey.jump(this.sounds);
     if (code === 'ArrowDown' || code === 'KeyS') this.turkey.slide(this.sounds);
+    // H was advertised on the title screen and in the README but had
+    // no handler in v1 — hide in a nearby haystack when pressed.
+    if (code === 'KeyH') this.tryHide();
   }
 
   onClick(x, y) {
