@@ -34,7 +34,9 @@ export function applyShot(game, shotInfo) {
       { kind: 'corn', x: 560, y: 342, w: 26, h: 30, passed: false, bob: 0, bobPhase: 0.5 },
       { kind: 'corn', x: 594, y: 342, w: 26, h: 30, passed: false, bob: 0, bobPhase: 0.5 },
       { kind: 'pumpkin', x: 700, y: 412, w: 46, h: 40, passed: false, bob: 0, bobPhase: 0 },
-      { kind: 'knife', x: 830, y: 390, w: 58, h: 30, passed: false, bob: 0, bobPhase: 0, swing: 0.4 },
+      // v3: knife at x=800 (was 830) so the blade + red handle sit fully
+      // inside the frame instead of clipping at the right edge.
+      { kind: 'knife', x: 800, y: 390, w: 58, h: 30, passed: false, bob: 0, bobPhase: 0, swing: 0.3 },
     ];
     game.turkey.y = 452 - 58;
     game.turkey.runTime = 1.2;

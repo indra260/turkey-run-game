@@ -56,7 +56,9 @@ export function drawHud(ctx, game) {
 }
 
 function panel(ctx, title, lines, accent) {
-  ctx.fillStyle = 'rgba(20,14,8,0.72)';
+  // v3: lighter dim (was 0.72) so the scene behind the title/end
+  // screens stays readable at contact-sheet size.
+  ctx.fillStyle = 'rgba(20,14,8,0.55)';
   ctx.fillRect(0, 0, VIEW.width, VIEW.height);
   ctx.fillStyle = accent;
   ctx.fillRect(VIEW.width / 2 - 260, 92, 520, 6);
@@ -116,7 +118,8 @@ export function drawEnd(ctx, game) {
 }
 
 export function drawPaused(ctx) {
-  ctx.fillStyle = 'rgba(20,14,8,0.6)';
+  // v3: match the lighter title/end dim so pausing never hides the scene.
+  ctx.fillStyle = 'rgba(20,14,8,0.5)';
   ctx.fillRect(0, 0, VIEW.width, VIEW.height);
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 44px sans-serif';

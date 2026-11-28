@@ -41,13 +41,15 @@ export function drawBackground(ctx, stage, distance, t) {
     ctx.moveTo(hx, 330); ctx.lineTo(hx + 130, 210); ctx.lineTo(hx + 260, 330);
     ctx.closePath(); ctx.fill();
   }
-  // Fence posts scrolling past.
-  ctx.fillStyle = '#8a5a30';
+  // Decorative background fence: deliberately pale and thin, so it
+  // never reads as an obstacle (v3: obstacle fences are red-brown
+  // with a white top rail; this one stays muted by design).
+  ctx.fillStyle = 'rgba(150,105,60,0.55)';
   const off = (distance * 28) % 90;
   for (let x = -off; x < VIEW.width; x += 90) {
-    ctx.fillRect(x, 392, 8, 60);
-    ctx.fillRect(x + 8, 408, 82, 8);
-    ctx.fillRect(x + 8, 430, 82, 8);
+    ctx.fillRect(x, 392, 6, 60);
+    ctx.fillRect(x + 6, 410, 84, 5);
+    ctx.fillRect(x + 6, 432, 84, 5);
   }
   // Ground.
   ctx.fillStyle = stage.ground;
@@ -79,10 +81,17 @@ export function drawCorn(ctx, e) {
 export function drawObstacle(ctx, e, stage) {
   if (e.kind === 'corn') { drawCorn(ctx, e); return; }
   if (e.kind === 'fence') {
-    ctx.fillStyle = '#7a4a22';
+    // Obstacle fence: red-brown with a white top rail and dark outline,
+    // unmistakable against the pale background fence (v3 contrast fix).
+    ctx.fillStyle = '#a03d1e';
     ctx.fillRect(e.x, e.y, 6, e.h); ctx.fillRect(e.x + e.w - 6, e.y, 6, e.h);
     ctx.fillRect(e.x - 4, e.y + 12, e.w + 8, 8);
     ctx.fillRect(e.x - 4, e.y + 34, e.w + 8, 8);
+    ctx.fillStyle = '#f5f0e6';
+    ctx.fillRect(e.x - 4, e.y + 12, e.w + 8, 3);
+    ctx.strokeStyle = '#5a1e0c'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(e.x - 4, e.y + 12, e.w + 8, 8);
+    ctx.strokeRect(e.x - 4, e.y + 34, e.w + 8, 8);
     return;
   }
   if (e.kind === 'pumpkin') {
@@ -114,14 +123,27 @@ export function drawObstacle(ctx, e, stage) {
     // Blade pivots near the top of its hitbox (e.y + 15) so what the
     // player sees is what can hit them: v1 pivoted at e.y + 40, below
     // the hitbox, so the visible blade never matched the danger zone.
+    // v3: thicker blade with a dark outline + red handle, so the knife
+    // reads instantly at contact-sheet size instead of a grey sliver.
     const swing = Math.sin(e.swing || 0) * 0.35;
     ctx.save();
     ctx.translate(e.x + 29, e.y + 15);
     ctx.rotate(swing);
-    ctx.fillStyle = '#c8ccd4';
-    ctx.beginPath(); ctx.moveTo(-28, -6); ctx.lineTo(14, -6); ctx.lineTo(28, 0); ctx.lineTo(14, 6); ctx.lineTo(-28, 6); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#5a2e16'; ctx.fillRect(-34, -8, 12, 16);
+    ctx.fillStyle = '#dfe3e8';
+    ctx.beginPath(); ctx.moveTo(-28, -9); ctx.lineTo(14, -9); ctx.lineTo(28, 0); ctx.lineTo(14, 9); ctx.lineTo(-28, 9); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#3a3f46'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#c0392b'; ctx.fillRect(-38, -11, 12, 22);
+    ctx.strokeStyle = '#7a1e12'; ctx.lineWidth = 1.5; ctx.strokeRect(-38, -11, 12, 22);
     ctx.restore();
+    // Warning triangle above the knife: the danger is easy to miss at
+    // speed, so flag it (drawn unrotated so it always reads upright).
+    ctx.fillStyle = '#ffd23e';
+    ctx.beginPath();
+    ctx.moveTo(e.x + 29, e.y - 16); ctx.lineTo(e.x + 41, e.y + 2); ctx.lineTo(e.x + 17, e.y + 2);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#3a2408'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('!', e.x + 29, e.y - 1); ctx.textAlign = 'left';
     ctx.fillStyle = '#8a5a30'; ctx.fillRect(e.x + 24, e.y + 15, 6, VIEW.groundY - e.y - 15);
     return;
   }
